@@ -686,6 +686,69 @@ var ShinyApp = function() {
     });
   });
 
+  addMessageHandler('shiny-insert-tab', function (message) {
+    var $tabsetPanel = $("#" + message.tabsetPanelId);
+    if ($tabsetPanel.length === 0) {
+      console.warn('There is no tabsetPanel with id ' + message.tabsetPanelId);
+      return;
+    };
+
+    // This is the JS equivalent of the builtItem() R function that is used
+    // to build a tabPanel when initializing a tabsetPanel
+    var $tab = $(message.tab.html);
+    var leadingHref = "#tab-" + $tabsetPanel.attr("data-tabsetid") + "-";
+
+    var prevTabIds = [];
+    $tabsetPanel.find("> li").each(function(){
+      prevTabIds.push($(this).find('> a').attr('href').replace(leadingHref,''));
+    });
+    prevTabIds = prevTabIds.map(Number);
+    var tabId = Math.max.apply(Math, prevTabIds) + 1;
+    var thisId = "tab-" + $tabsetPanel.attr("data-tabsetid") + "-" + tabId;
+
+    var icon = message.icon.html;
+
+    // if there is an icon, render the possible deps
+    if (icon !== "") exports.renderDependencies(message.icon.deps);
+
+    var $aTag = $("<a>", {
+      href: "#" + thisId,
+      "data-toggle": "tab",
+      "data-value": $tab.attr("data-value")
+    }).append(icon).append($tab.attr("title"));
+
+    var $liTag = $("<li>").append($aTag);
+    var $divTag = $tab.attr("id", thisId);
+    $divTag.removeAttr("title");
+
+    $tabsetPanel.append($liTag);
+
+    var $tabContent = $tabsetPanel.find("+ .tab-content");
+    $tabContent.append($divTag);
+
+    exports.renderDependencies(message.tab.deps);
+    exports.renderContent($tabContent[0], $tabContent.html());
+
+    /*
+    if (message.target === null) {
+      if (message.position === "left") {
+        tabsetPanel.prepend($divTag);
+
+      }
+      .append()
+    }
+
+    var target = tabsetPanel.find("a[data-value='" + message.target + "']");
+    if (target.length === 0) {
+      console.warn('There is no tabPanel with value ' + message.target +
+                   'Appending tab to the end...');
+      break;
+    }
+    */
+
+    //exports.renderContent(target, message.content, message.where);
+  });
+
   addMessageHandler('updateQueryString', function(message) {
 
     // leave the bookmarking code intact
@@ -747,6 +810,9 @@ var ShinyApp = function() {
       var binding = this.$bindings[key];
       if (binding && binding.showProgress) {
         binding.showProgress(true);
+        $(binding ? binding.el : null).trigger({
+          type: 'shiny:invalidated'
+        });
       }
     },
 
