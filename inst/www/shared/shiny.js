@@ -1298,8 +1298,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     addMessageHandler('shiny-insert-tab', function (message) {
       var $tabsetPanel = $("#" + message.tabsetPanelId);
       if ($tabsetPanel.length === 0) {
-        console.warn('There is no tabsetPanel with id ' + message.tabsetPanelId);
-        return;
+        throw 'There is no tabsetPanel with id ' + message.tabsetPanelId;
       };
 
       // This is the JS equivalent of the builtItem() R function that is used
@@ -1332,9 +1331,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
       var $tabContent = $tabsetPanel.find("+ .tab-content");
 
-      //$tabsetPanel.append($liTag);
-      //$tabContent.append($divTag);
-
       if (message.target === null) {
         if (message.position === "left") {
           $tabsetPanel.prepend($liTag);
@@ -1354,25 +1350,39 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
           $tabContent.append($divTag);
         } else {
           if (message.position === "left") {
-
             $targetTabsetPanel.before($liTag);
             $targetTabContent.before($divTag);
-
-            //$divTag.insertBefore($target);
-            //$target[0].insertAdjacentHTML("beforebegin", $divTag.html());
           } else if (message.position === "right") {
-
             $targetTabsetPanel.after($liTag);
             $targetTabContent.after($divTag);
-
-            //$divTag.insertAfter($target);
-            //$target[0].insertAdjacentHTML("afterend", $divTag.html());
           }
         }
       }
 
       exports.renderDependencies(message.tab.deps);
       exports.renderContent($tabContent[0], $tabContent.html());
+    });
+
+    addMessageHandler('shiny-remove-tab', function (message) {
+      var $tabsetPanel = $("#" + message.tabsetPanelId);
+      if ($tabsetPanel.length === 0) {
+        throw 'There is no tabsetPanel with id ' + message.tabsetPanelId;
+      };
+      var $tabContent = $tabsetPanel.find("+ .tab-content");
+      var dataValue = "[data-value='" + message.target + "']";
+
+      var $targetTabsetPanel = $tabsetPanel.find("a" + dataValue).parent();
+      var $targetTabContent = $tabContent.find("div" + dataValue);
+
+      if ($targetTabsetPanel.length === 0) {
+        throw 'There is no tabPanel with value ' + message.target;
+      }
+
+      var els = [$targetTabsetPanel, $targetTabContent];
+      $(els).each(function (i, el) {
+        exports.unbindAll(el, true);
+        $(el).remove();
+      });
     });
 
     addMessageHandler('updateQueryString', function (message) {
