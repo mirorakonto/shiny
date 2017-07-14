@@ -2039,11 +2039,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     };
     this.showProgress = function (el, show) {
       var RECALC_CLASS = 'recalculating';
-      if (show) {
-        $(el).addClass(RECALC_CLASS);
-      } else {
-        $(el).removeClass(RECALC_CLASS);
-      }
+      if (show) $(el).addClass(RECALC_CLASS);else $(el).removeClass(RECALC_CLASS);
     };
   }).call(OutputBinding.prototype);
 
