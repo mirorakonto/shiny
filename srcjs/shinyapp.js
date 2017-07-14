@@ -721,32 +721,41 @@ var ShinyApp = function() {
     var $divTag = $tab.attr("id", thisId);
     $divTag.removeAttr("title");
 
-    $tabsetPanel.append($liTag);
 
     var $tabContent = $tabsetPanel.find("+ .tab-content");
-    $tabContent.append($divTag);
+
+    if (message.target === null) {
+      if (message.position === "left") {
+        $tabsetPanel.prepend($liTag);
+        $tabContent.prepend($divTag);
+
+      } else if (message.position === "right") {
+        $tabsetPanel.append($liTag);
+        $tabContent.append($divTag);
+      }
+    } else {
+      var dataValue = "[data-value='" + message.target + "']";
+      var $targetTabsetPanel = $tabsetPanel.find("a" + dataValue).parent();
+      var $targetTabContent = $tabContent.find("div" + dataValue);
+
+      if ($targetTabsetPanel.length === 0) {
+        console.warn('There is no tabPanel with value ' + message.target +
+                     'Appending tab to the end...');
+        $tabsetPanel.append($liTag);
+        $tabContent.append($divTag);
+      } else {
+        if (message.position === "left") {
+          $targetTabsetPanel.before($liTag);
+          $targetTabContent.before($divTag);
+        } else if (message.position === "right") {
+          $targetTabsetPanel.after($liTag);
+          $targetTabContent.after($divTag);
+        }
+      }
+    }
 
     exports.renderDependencies(message.tab.deps);
     exports.renderContent($tabContent[0], $tabContent.html());
-
-    /*
-    if (message.target === null) {
-      if (message.position === "left") {
-        tabsetPanel.prepend($divTag);
-
-      }
-      .append()
-    }
-
-    var target = tabsetPanel.find("a[data-value='" + message.target + "']");
-    if (target.length === 0) {
-      console.warn('There is no tabPanel with value ' + message.target +
-                   'Appending tab to the end...');
-      break;
-    }
-    */
-
-    //exports.renderContent(target, message.content, message.where);
   });
 
   addMessageHandler('updateQueryString', function(message) {
